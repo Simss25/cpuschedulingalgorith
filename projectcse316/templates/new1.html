@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced CPU Scheduling Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* 1. Global Reset & Typography - Modernized */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #eef2f7; /* Very light background */
+            color: #2c3e50; /* Dark text */
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        header h1 {
+            text-align: center;
+            color: #1a5276; /* Darker, sophisticated blue */
+            margin-bottom: 30px;
+            padding: 20px 0;
+            font-weight: 700;
+            font-size: 2.5em;
+        }
+
+        /* 2. Card Layout for Sections */
+        .card {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border-top: 5px solid #3498db; /* Subtle blue top border for focus */
+        }
+        
+        h2 {
+            color: #1a5276;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+
+        /* 3. Table Styling - Cleaner Lines */
+        #input-table, #results-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures border-radius applies to table content */
+        }
+        #results-table th, #input-table th, 
+        #results-table td, #input-table td {
+            border: 1px solid #dfe6e9; /* Lighter border color */
+            padding: 12px;
+            text-align: center;
+        }
+        #input-table th, #results-table th {
+            background-color: #3498db; /* Blue header */
+            color: white;
+            font-weight: 500;
+        }
+        #results-table tbody tr:hover {
+            background-color: #f0f8ff; /* Subtle hover effect */
+            transition: background-color 0.2s ease;
+        }
+
+        /* 4. Input & Button Styling - Modern and Grouped */
+        input[type="number"] { 
+            width: 70px; 
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .button-group, .control-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px; /* Space between buttons */
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .calc-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        /* Specific Button Colors */
+        .btn-primary { 
+            background-color: #2ecc71; /* Green for calculation */
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background-color: #27ae60; 
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+        .btn-secondary {
+            background-color: #3498db; /* Blue for management */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #2980b9;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        .btn-compare {
+            background-color: #e74c3c; /* Red for comparison/contrast */
+            color: white;
+        }
+        .btn-compare:hover {
+            background-color: #c0392b;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        /* 5. Metrics Display - Cleaned up */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        #average-metrics p, #advanced-metrics p {
+            padding: 5px 0;
+            margin: 0;
+            border-bottom: 1px dashed #ecf0f1;
+        }
+        #average-metrics strong, #advanced-metrics strong {
+            color: #27ae60; /* Success green */
+            font-size: 1.2em;
+            float: right;
+            font-weight: 700;
+        }
+        
+        #advanced-metrics {
+            padding: 15px;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        /* 6. Gantt Chart Specifics - Visual Polish */
+        .gantt-chart {
+            display: flex;
+            height: 70px; /* Taller for better visibility */
+            width: 100%;
+            border: 2px solid #34495e;
+            margin-top: 40px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+        .gantt-block {
+            line-height: 70px;
+            text-align: center;
+            border-right: 1px solid rgba(0, 0, 0, 0.2);
+            position: relative;
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff; 
+            min-width: 20px;
+            box-sizing: border-box;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4);
+        }
+        .gantt-block-idle { 
+            background-color: #ecf0f1 !important; 
+            color: #7f8c8d; 
+            border-right: 1px dashed #bdc3c7;
+        }
+        .time-marker, .last-time-marker {
+            font-size: 11px;
+            color: #555;
+            font-weight: normal;
+            position: absolute;
+            bottom: -25px; 
+            transform: translateX(-50%);
+        }
+        .last-time-marker {
+            right: 0;
+            transform: translateX(50%);
+        }
+
+        /* 7. Comparison Section */
+        .comparison-section {
+            text-align: center;
+        }
+        .comparison-section p {
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>CPU Scheduling Simulator (The Virtual Operating System)</h1>
+        </header>
+
+        <section class="card input-section">
+            <h2>1. Process Input Setup</h2>
+
+            <div class="control-bar">
+                <div>
+                    <label for="quantum-input">Time Quantum (q):</label>
+                    <input type="number" id="quantum-input" value="2" min="1">
+                </div>
+                <button onclick="addProcessRow(0, 5, 2)" class="calc-button btn-secondary">➕ Add Process</button>
+            </div>
+            
+            <table id="input-table">
+                <thead>
+                    <tr>
+                        <th>PID</th>
+                        <th>Arrival Time (AT)</th>
+                        <th>Burst Time (BT)</th>
+                        <th>Priority (P)</th>
+                    </tr>
+                </thead>
+                <tbody id="process-list">
+                    </tbody>
+            </table>
+            
+            <h3>Select Scheduling Algorithm</h3>
+            <div class="button-group">
+                <button id="calculate-fcfs-btn" class="calc-button btn-primary">FCFS</button>
+                <button id="calculate-rr-btn" class="calc-button btn-primary">Round Robin</button>
+                <button id="calculate-sjf-btn" class="calc-button btn-primary">Non-Preemptive SJF</button>
+                <button id="calculate-srtf-btn" class="calc-button btn-primary">Preemptive SRTF (SRT)</button>
+                <button id="calculate-priority-btn" class="calc-button btn-primary">Non-Preemptive Priority</button> 
+                <button id="calculate-priority-preemptive-btn" class="calc-button btn-primary">Preemptive Priority</button>
+            </div>
+        </section>
+
+        <section class="card output-section">
+            <h2>2. Simulation Results</h2>
+            
+            <h3>Process Execution Details</h3>
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>PID</th>
+                        <th>AT</th>
+                        <th>BT</th>
+                        <th>P</th>
+                        <th style="background-color: #27ae60;">Completion Time (CT)</th>
+                        <th style="background-color: #2980b9;">Turnaround Time (TAT)</th>
+                        <th style="background-color: #e67e22;">Waiting Time (WT)</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    </tbody>
+            </table>
+            
+            <div class="metrics-grid">
+                <div id="average-metrics" class="card" style="padding: 15px; border-top: 5px solid #27ae60;">
+                    <h3>Key Averages</h3>
+                    <p>Average Turnaround Time (TAT): <strong id="avg-tat">--</strong></p>
+                    <p>Average Waiting Time (WT): <strong id="avg-wt">--</strong></p>
+                </div>
+                
+                <div id="advanced-metrics">
+                    <h3>Advanced Performance Metrics</h3>
+                    <p>CPU Utilization: <strong id="cpu-utilization">--</strong></p>
+                    <p>Throughput (Proc/Unit Time): <strong id="throughput">--</strong></p>
+                    <p>Energy Consumption (Watt-Units): <strong id="energy-consumption">--</strong></p>
+                    <p>Thermal Efficiency Index (TEI): <strong id="tei">--</strong></p>
+                </div>
+            </div>
+            
+            <h2>3. Gantt Chart (CPU Timeline)</h2>
+            <p style="text-align: center; margin-top: -10px; color: #7f8c8d;">Visual representation of process execution over time. (Idle time shown in light gray).</p>
+            <div id="gantt-chart" class="gantt-chart">
+            </div>
+        </section>
+
+        <section class="card comparison-section">
+            <h2>4. Algorithm Comparison</h2>
+            <p>Run all major algorithms on the same input set to compare key performance indicators (Lower is better for time metrics).</p>
+            <button id="run-comparison-btn" class="calc-button btn-compare">🔥 Run Comparison (FCFS, SJF, RR)</button>
+            <div style="width: 100%; max-width: 900px; margin: 20px auto;">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let processCount = 0;
+        let comparisonChartInstance = null; // Chart.js instance holder
+
+        // Updated default to match new function signature, ensuring AT=0, BT=5, PR=2 for P1
+        function addProcessRow(at=0, bt=5, pr=1) { 
+            processCount++;
+            const list = document.getElementById('process-list');
+            const row = list.insertRow();
+            
+            row.insertCell().innerHTML = `<span style="font-weight: bold;">P${processCount}</span>`;
+            
+            const atInput = document.createElement('input');
+            atInput.type = 'number'; atInput.value = at; atInput.min = 0;
+            row.insertCell().appendChild(atInput);
+
+            const btInput = document.createElement('input');
+            btInput.type = 'number'; btInput.value = bt; btInput.min = 1;
+            row.insertCell().appendChild(btInput);
+            
+            const prInput = document.createElement('input');
+            prInput.type = 'number'; prInput.value = pr; prInput.min = 1;
+            row.insertCell().appendChild(prInput);
+        }
+
+        window.onload = function() {
+            // Default input for testing Priority: P2 has highest priority (1)
+            addProcessRow(0, 5, 2); 
+            addProcessRow(1, 3, 1); 
+            addProcessRow(2, 8, 3);
+            
+            // Single Algorithm Event Listeners (using new IDs)
+            document.getElementById('calculate-fcfs-btn').addEventListener('click', () => calculateSchedule('fcfs'));
+            document.getElementById('calculate-rr-btn').addEventListener('click', () => calculateSchedule('rr'));
+            document.getElementById('calculate-sjf-btn').addEventListener('click', () => calculateSchedule('sjf'));
+            document.getElementById('calculate-srtf-btn').addEventListener('click', () => calculateSchedule('srtf'));
+            document.getElementById('calculate-priority-btn').addEventListener('click', () => calculateSchedule('priority'));
+            document.getElementById('calculate-priority-preemptive-btn').addEventListener('click', () => calculateSchedule('priority_preemptive'));
+
+            // Comparison Event Listener
+            document.getElementById('run-comparison-btn').addEventListener('click', runComparison);
+        };
+        
+        // --- CORE CALCULATE FUNCTION (NO CHANGES) ---
+        async function calculateSchedule(algorithm) {
+            const quantum = document.getElementById('quantum-input').value;
+            const processListBody = document.getElementById('process-list');
+            const dataToSend = [];
+            
+            for (let i = 0; i < processListBody.rows.length; i++) {
+                const row = processListBody.rows[i];
+                const at = row.cells[1].querySelector('input').value;
+                const bt = row.cells[2].querySelector('input').value;
+                const pr = row.cells[3].querySelector('input').value;
+                dataToSend.push([`P${i+1}`, at, bt, pr]);
+            }
+            
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        processes: dataToSend, 
+                        quantum: quantum,
+                        algorithm: algorithm
+                    }) 
+                });
+
+                const result = await response.json();
+                
+                if (response.status !== 200) {
+                    alert(`Error: ${result.error}`);
+                    return;
+                }
+
+                displayResults(result.results, result.gantt_timeline || [], result.metrics);
+                
+            } catch (error) {
+                console.error("Calculation Error:", error);
+                alert("Failed to calculate schedule. Check your server console.");
+            }
+        }
+
+        // --- COMPARISON FUNCTIONS (NO CHANGES) ---
+        async function runComparison() {
+            const quantum = document.getElementById('quantum-input').value;
+            const processListBody = document.getElementById('process-list');
+            const dataToSend = [];
+
+            for (let i = 0; i < processListBody.rows.length; i++) {
+                const row = processListBody.rows[i];
+                const at = row.cells[1].querySelector('input').value;
+                const bt = row.cells[2].querySelector('input').value;
+                const pr = row.cells[3].querySelector('input').value;
+                dataToSend.push([`P${i+1}`, at, bt, pr]);
+            }
+            
+            try {
+                const response = await fetch('/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        processes: dataToSend, 
+                        quantum: quantum
+                    }) 
+                });
+
+                const comparisonData = await response.json();
+                
+                if (response.status !== 200) {
+                    alert(`Error running comparison: ${comparisonData.error}`);
+                    return;
+                }
+
+                drawComparisonChart(comparisonData.results); 
+                
+            } catch (error) {
+                console.error("Comparison Error:", error);
+                alert("Failed to run comparison.");
+            }
+        }
+
+        function drawComparisonChart(results) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            const labels = results.map(r => r.algorithm);
+            const avgWTData = results.map(r => r.avg_wt);
+            const avgTATData = results.map(r => r.avg_tat); 
+            const teiData = results.map(r => r.tei); 
+
+            if (comparisonChartInstance) {
+                comparisonChartInstance.destroy();
+            }
+
+            comparisonChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Average Waiting Time (WT)',
+                            data: avgWTData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.8)', /* Brighter */
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Average Turnaround Time (TAT)',
+                            data: avgTATData,
+                            backgroundColor: 'rgba(52, 152, 219, 0.8)', /* Blue */
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Thermal Efficiency Index (TEI)',
+                            data: teiData,
+                            backgroundColor: 'rgba(46, 204, 113, 0.8)', /* Green */
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Time / Index Value'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Algorithm Performance Comparison (Same Process Set)',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- DISPLAY RESULTS FUNCTION (Minor Update for new IDs) ---
+        function displayResults(results, gantt_timeline, metrics) {
+            const resultsBody = document.getElementById('results-body');
+            const ganttChart = document.getElementById('gantt-chart');
+            const avgTATElement = document.getElementById('avg-tat'); 
+            const avgWTElement = document.getElementById('avg-wt'); 
+
+            resultsBody.innerHTML = '';
+            ganttChart.innerHTML = '';
+            
+            results.forEach(p => {
+                const row = resultsBody.insertRow();
+                row.insertCell().textContent = p.pid;
+                row.insertCell().textContent = p.at;
+                row.insertCell().textContent = p.bt;
+                row.insertCell().textContent = p.pr || '--'; 
+                row.insertCell().textContent = p.ct;
+                row.insertCell().textContent = p.tat;
+                row.insertCell().textContent = p.wt;
+            });
+            
+            // Display Averages (Fixing the undefined issue by targeting the strong tags' parents)
+            avgTATElement.textContent = metrics.avg_tat ? metrics.avg_tat.toFixed(2) : '--';
+            avgWTElement.textContent = metrics.avg_wt ? metrics.avg_wt.toFixed(2) : '--';
+
+            // Display Advanced Metrics
+            document.getElementById('cpu-utilization').textContent = metrics.utilization ? `${metrics.utilization.toFixed(2)}%` : '--';
+            document.getElementById('throughput').textContent = metrics.throughput ? metrics.throughput.toFixed(3) : '--';
+            document.getElementById('energy-consumption').textContent = metrics.energy ? metrics.energy.toFixed(2) : '--';
+            document.getElementById('tei').textContent = metrics.tei ? metrics.tei.toFixed(3) : '--'; 
+
+            drawGanttChart(gantt_timeline.length > 0 ? gantt_timeline : results, ganttChart);
+        }
+        
+        // --- GANTT CHART FUNCTION (NO CHANGES) ---
+        function drawGanttChart(data, container) {
+            container.innerHTML = '';
+            
+            let timeline = data;
+            
+            if (data.every(item => item.pid && 'ct' in item) && data.length > 0 && !data[0].start) {
+                timeline = [];
+                let current_time_marker = 0;
+                
+                const sortedData = [...data].sort((a, b) => a.ct - b.ct);
+
+                sortedData.forEach(p => {
+                    const actual_start_time = p.ct - p.bt - p.wt; 
+                    if (current_time_marker < actual_start_time) {
+                        timeline.push({ 
+                            start: current_time_marker, 
+                            end: actual_start_time, 
+                            pid: 'Idle'
+                        });
+                        current_time_marker = actual_start_time;
+                    }
+                    timeline.push({
+                        start: current_time_marker,
+                        end: p.ct,
+                        pid: p.pid
+                    });
+                    current_time_marker = p.ct;
+                });
+            }
+            
+            const totalTime = timeline[timeline.length - 1] ? timeline[timeline.length - 1].end : 0;
+            if (totalTime === 0) return;
+
+            timeline.forEach((block, index) => {
+                const duration = block.end - block.start;
+                const widthPercent = (duration / totalTime) * 100;
+                
+                if (duration <= 0) return;
+
+                const blockDiv = document.createElement('div');
+                blockDiv.className = 'gantt-block';
+                blockDiv.textContent = block.pid;
+                blockDiv.style.width = `${widthPercent}%`;
+                
+                if (block.pid === 'Idle') {
+                    blockDiv.classList.add('gantt-block-idle');
+                } else {
+                    const colorSeed = block.pid.charCodeAt(1) * 30 + (block.pid.length * 5); 
+                    blockDiv.style.backgroundColor = `hsl(${colorSeed % 360}, 70%, 50%)`;
+                }
+
+                if (index === 0 || block.start !== (timeline[index - 1] ? timeline[index - 1].start : -1)) {
+                    const startTimeMarker = document.createElement('span');
+                    startTimeMarker.textContent = block.start;
+                    startTimeMarker.className = 'time-marker';
+                    blockDiv.appendChild(startTimeMarker);
+                }
+
+                if (block.end === totalTime && totalTime !== 0) {
+                   const endTimeMarker = document.createElement('span');
+                   endTimeMarker.textContent = block.end;
+                   endTimeMarker.className = 'last-time-marker';
+                   container.appendChild(endTimeMarker); // Append to container, not the last block
+                }
+                
+                container.appendChild(blockDiv);
+            });
+            
+        }
+    </script>
+</body>
+</html>
